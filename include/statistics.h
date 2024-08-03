@@ -28,6 +28,12 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
+inline int freeRam() {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
 // statistics (stats sent only when there is no communication)
 class
 {
@@ -97,7 +103,7 @@ class
 			if (totalFrames > 0)
 			{
 				finalShowFrames = showFrames;
-				finalGoodFrames = std::min(goodFrames, totalFrames);
+				finalGoodFrames = min(goodFrames, totalFrames);
 				finalTotalFrames = totalFrames;
 			}
 
@@ -128,7 +134,7 @@ class
 			SerialPort.write(", incompl.: ");
 			SerialPort.print(finalTotalFrames - finalGoodFrames);
 			SerialPort.write(", heap: ");
-			SerialPort.print(ESP.getFreeHeap());
+			SerialPort.print(freeRam());
 			#if defined(NEOPIXEL_RGBW)
 				calibrationConfig.printCalibration();
 			#endif

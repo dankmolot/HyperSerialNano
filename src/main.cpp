@@ -47,9 +47,6 @@
 #ifdef NEOPIXEL_RGB
 	#pragma message(VAR_NAME_VALUE(NEOPIXEL_RGB))
 #endif
-#ifdef COLD_WHITE
-	#pragma message(VAR_NAME_VALUE(COLD_WHITE))
-#endif
 #ifdef SPILED_APA102
 	#pragma message(VAR_NAME_VALUE(SPILED_APA102))
 #endif
@@ -58,14 +55,19 @@
 #endif
 #pragma message(VAR_NAME_VALUE(SERIALCOM_SPEED))
 
-#ifdef NEOPIXEL_RGBW
-	#define LED_DRIVER NeoPixelBus<NeoGrbwFeature, NeoEsp8266Uart1Sk6812Method>
-#elif NEOPIXEL_RGB
-	#define LED_DRIVER NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart1Ws2812xMethod>
-#elif SPILED_APA102
-	#define LED_DRIVER NeoPixelBus<DotStarBgrFeature, DotStarSpiMethod>
-#elif SPILED_WS2801
-	#define LED_DRIVER NeoPixelBus<NeoRbgFeature, NeoWs2801Spi2MhzMethod>
+#if NEOPIXEL_RGB || NEOPIXEL_RGBW
+    #define NEO_METHOD NeoWs2812xMethod
+    #if NEOPIXEL_RGB
+        #define NEO_FEATURE NeoGrbFeature
+    #elif NEOPIXEL_RGBW
+        #define NEO_FEATURE NeoGrbwFeature
+    #endif
+#endif
+
+#if defined(NEO_METHOD) && defined(NEO_FEATURE)
+    #define LED_DRIVER NeoPixelBus<NEO_FEATURE, NEO_METHOD>
+#else
+    #error "Unknown LED type"
 #endif
 
 #pragma message(VAR_NAME_VALUE2(LED_DRIVER))
@@ -76,12 +78,11 @@
 void setup()
 {
 	// Init serial port
-	Serial.setRxBufferSize(MAX_BUFFER);
 	Serial.begin(SERIALCOM_SPEED);
 	while (!Serial) continue;
 
 #ifdef CLEAR_LEDS
-	LED_DRIVER* _ledStrip = new LED_DRIVER(CLEAR_LEDS);
+	LED_DRIVER* _ledStrip = new LED_DRIVER(CLEAR_LEDS, LED_PIN);
 	ColorDefinition _black(0);
 	_ledStrip->Begin();
 	for(int i = 0; i < CLEAR_LEDS; i++)
@@ -94,26 +95,22 @@ void setup()
 
 	// Display config
 	Serial.println(HELLO_MESSAGE);
-
-	// Colorspace/Led type info
-	#if defined(NEOPIXEL_RGBW) || defined(NEOPIXEL_RGB)
-		#ifdef NEOPIXEL_RGBW
-			#ifdef COLD_WHITE
-				calibrationConfig.setParamsAndPrepareCalibration(0xFF, 0xA0, 0xA0, 0xA0);
-				Serial.println("NeoPixelBus SK6812 cold GRBW.");
-			#else
-				calibrationConfig.setParamsAndPrepareCalibration(0xFF, 0xB0, 0xB0, 0x70);
-				Serial.println("NeoPixelBus SK6812 neutral GRBW.");
-			#endif
-			calibrationConfig.printCalibration();
-		#else
-			Serial.println("NeoPixelBus ws281x type (GRB).");
-		#endif
-	#elif defined(SPILED_APA102)
-		Serial.println("SPI APA102 compatible type (BGR).");
-	#elif defined(SPILED_WS2801)
-		Serial.println("SPI WS2801 (RBG).");
-	#endif
+    
+    #if defined(NEO_METHOD) && defined(NEO_FEATURE)
+        Serial.print("NeoPixelBus Ws2812x ");
+        #if NEOPIXEL_RGB
+            Serial.println("GRB.");
+        #elif NEOPIXEL_RGBW
+            #if COLD_WHITE
+                calibrationConfig.setParamsAndPrepareCalibration(0xFF, 0xA0, 0xA0, 0xA0);
+                Serial.println("cold GRBW");
+            #else
+                calibrationConfig.setParamsAndPrepareCalibration(0xFF, 0xB0, 0xB0, 0x70);
+                Serial.println("neutral GRBW");
+            #endif
+            calibrationConfig.printCalibration();
+        #endif
+    #endif
 
 	Serial.flush();
 	delay(50);
@@ -124,4 +121,3 @@ void loop()
 	serialTaskHandler();
 	processData();
 }
-

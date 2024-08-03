@@ -67,7 +67,7 @@ class Base
 
 			if (ledStrip1 == nullptr)
 			{
-				ledStrip1 = new LED_DRIVER(ledsNumber);
+				ledStrip1 = new LED_DRIVER(ledsNumber, LED_PIN);
 				ledStrip1->Begin();
 			}
 		}

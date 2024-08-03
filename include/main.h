@@ -28,7 +28,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define MAX_BUFFER 5120
+#define MAX_BUFFER 512
 #define HELLO_MESSAGE "\r\nWelcome!\r\nAwa driver 8."
 
 #include "calibration.h"
@@ -46,7 +46,7 @@ void serialTaskHandler()
 
 	if (incomingSize > 0)
 	{
-		SerialPort.read(&(base.buffer[0]), incomingSize);
+		SerialPort.readBytes(&(base.buffer[0]), incomingSize);
 		base.queueEnd = incomingSize;
 		base.queueCurrent = 0;
 	}
