@@ -39,7 +39,7 @@ jobs:
       if: (startsWith(github.event.ref, 'refs/tags') != true)
       with:
         path: |
-          .pio/build/*.bin
+          .pio/build/*.hex
 
     - uses: actions/upload-artifact@v3
       name: Upload artifacts (release)
@@ -47,7 +47,7 @@ jobs:
       with:
         name: firmware-release
         path: |
-          .pio/build/*.bin
+          .pio/build/*.hex
 
 ################################
 ###### Publish Releases ########
